@@ -1,7 +1,12 @@
-using MassTransit;
-using Fcg.Contracts;
+using PaymentsAPI.Infrastructure.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddMassTransit(x => { x.AddConsumer<OrderPlacedConsumer>(); x.UsingRabbitMq((context, cfg) => { cfg.Host(builder.Configuration["RabbitMq:Host"] ?? "localhost", "/", h => { h.Username(builder.Configuration["RabbitMq:Username"] ?? "guest"); h.Password(builder.Configuration["RabbitMq:Password"] ?? "guest"); }); cfg.ReceiveEndpoint(builder.Configuration["RabbitMq:OrderQueue"] ?? "payments-orders", e => e.ConfigureConsumer<OrderPlacedConsumer>(context)); }); });
-builder.Services.AddEndpointsApiExplorer(); builder.Services.AddSwaggerGen(); var app = builder.Build(); app.UseSwagger(); app.UseSwaggerUI(); app.MapGet("/health", () => Results.Ok(new { status = "healthy" })); app.Run();
-public class OrderPlacedConsumer(IConfiguration config, ILogger<OrderPlacedConsumer> logger) : IConsumer<OrderPlacedEvent> { public async Task Consume(ConsumeContext<OrderPlacedEvent> context) { var e = context.Message; var approve = config.GetValue("Payments:AlwaysApprove", true); var status = approve ? PaymentStatus.Approved : PaymentStatus.Rejected; logger.LogInformation("Pagamento {OrderId} processado: {Status}", e.OrderId, status); await context.Publish(new PaymentProcessedEvent(e.OrderId, e.UserId, e.GameId, e.Price, status, approve ? null : "Pagamento recusado pela simulacao.", DateTimeOffset.UtcNow)); } }
-namespace Fcg.Contracts { public enum PaymentStatus { Approved, Rejected } public record OrderPlacedEvent(Guid OrderId, Guid UserId, Guid GameId, decimal Price, DateTimeOffset PlacedAt); public record PaymentProcessedEvent(Guid OrderId, Guid UserId, Guid GameId, decimal Price, PaymentStatus Status, string? Reason, DateTimeOffset ProcessedAt); }
+
+builder.Services.AddPaymentsApi(builder.Configuration);
+
+var app = builder.Build();
+
+await app.InitializePaymentsDatabaseAsync();
+app.UsePaymentsApi();
+
+app.Run();

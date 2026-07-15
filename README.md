@@ -16,6 +16,7 @@ dotnet run --project PaymentsAPI.sln
 - `RabbitMq__Password`
 - `RabbitMq__OrderQueue`
 - `Payments__AlwaysApprove`
+- `ConnectionStrings__Database` (PostgreSQL exclusivo do serviço)
 
 ## Docker
 
