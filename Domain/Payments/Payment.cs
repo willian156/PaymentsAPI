@@ -2,7 +2,9 @@ namespace PaymentsAPI.Domain.Payments;
 
 public class Payment
 {
-    private Payment() { }
+    private Payment()
+    {
+    }
 
     public Payment(Guid orderId, Guid userId, Guid gameId, decimal amount)
     {
@@ -33,20 +35,4 @@ public class Payment
         Reason = approved ? null : "Pagamento recusado pela simulação.";
         ProcessedAt = DateTimeOffset.UtcNow;
     }
-}
-
-public enum PaymentStatus
-{
-    Pending,
-    Approved,
-    Rejected,
-}
-
-public interface IPaymentRepository
-{
-    Task<Payment?> GetByOrderAsync(Guid id, CancellationToken ct);
-    Task<Payment?> GetAsync(Guid id, CancellationToken ct);
-    Task<IReadOnlyList<Payment>> ListAsync(CancellationToken ct);
-    void Add(Payment p);
-    Task SaveAsync(CancellationToken ct);
 }
