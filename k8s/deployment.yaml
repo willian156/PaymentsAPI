@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: payments-api
-          image: fcg/payments-api:latest
+          image: fcg/payments-api:cors-v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -23,7 +23,13 @@ spec:
             - configMapRef:
                 name: payments-api-config
             - secretRef:
-                name: payments-api-secrets
+                name: fcg-secrets
+          env:
+            - name: ConnectionStrings__Database
+              valueFrom:
+                secretKeyRef:
+                  name: fcg-secrets
+                  key: PaymentsDatabase
           readinessProbe:
             httpGet:
               path: /health
